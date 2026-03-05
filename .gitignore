@@ -45,6 +45,7 @@ coverage.xml
 # Runtime artifacts (tmux sessions, captures, logs)
 tmp/
 *.log
+.agentsys/
 
 # Generated docs
 site/
