@@ -6,7 +6,7 @@ Current CAO demo scripts in `scripts/demo/` are primarily one-shot validation fl
 
 **Goals:**
 - Provide a repeatable local interactive demo that starts a CAO-backed Claude session and keeps it alive for manual inspection until the user intentionally stops it.
-- Make session state discoverable by emitting stable metadata needed for `tmux attach`, terminal-log tailing, and subsequent `send-prompt` calls.
+- Make session state discoverable by emitting stable metadata needed for `tmux attach`, terminal-log tailing, and subsequent name-based `send-prompt` / `stop-session` calls.
 - Support multi-turn prompt driving against one session identity with simple command surfaces suitable for manual and scripted usage.
 - Preserve existing CI-friendly demo behavior by isolating this interactive flow instead of changing current one-shot demos.
 
@@ -39,13 +39,52 @@ Rationale: tmux inspection and key injection patterns are local host operations;
 Alternatives considered:
 - Allow remote CAO endpoints: introduces uncertainty around terminal ownership/visibility and would need additional transport guarantees.
 
+5. Fix the demo CAO base URL to `http://127.0.0.1:9889`.
+Rationale: This workflow is intentionally single-path and local. Pinning the loopback target removes operator ambiguity, avoids override-specific branching, and keeps launcher behavior deterministic.
+Alternatives considered:
+- Accept arbitrary CAO base URL values: more flexible, but contrary to the demo's local-only goal and less predictable for tmux inspection.
+
+6. Use name-based `--agent-identity` as the primary session handle.
+Rationale: Current runtime already supports tmux-backed name identities for `start-session`, `send-prompt`, and `stop-session`. Keeping the demo operator-facing around one stable identity is simpler than forcing users to work from manifest paths.
+Alternatives considered:
+- Use `session_manifest` as the only resume handle: works, but is less ergonomic for a human-driven demo and does not match the intended interactive operator workflow.
+
+7. `start` force-closes any previously active demo session before launching the replacement session.
+Rationale: The demo is intended to operate one agent at a time. Replacing the previous session keeps the workflow simple and avoids making operators perform explicit cleanup before every restart.
+Alternatives considered:
+- Fail when active state exists: safer for general-purpose tooling, but adds friction to this demo-specific workflow.
+
+## State Model
+
+The interactive demo persists a workspace-local state artifact that is rewritten across `start`, `send-turn`, `inspect`, and `stop`.
+
+Required state fields:
+
+- `active`: whether the demo currently believes the session is active
+- `agent_identity`: canonical tmux-backed name used as the primary handle for `send-prompt` and `stop-session`
+- `session_manifest`: persisted runtime manifest path retained for diagnostics
+- `session_name`: resolved tmux / CAO session name
+- `tmux_target`: attach target shown to operators
+- `terminal_id`: CAO terminal identifier
+- `terminal_log_path`: CAO terminal log path
+- `runtime_root`: runtime root used for generated artifacts
+- `workspace_dir`: demo workspace path
+- `updated_at`: ISO-8601 UTC timestamp of the most recent state update
+
+Lifecycle rules:
+
+- `start` always targets `http://127.0.0.1:9889`.
+- If existing state is marked active, `start` first attempts `brain_launch_runtime stop-session --agent-identity <previous-agent-identity>` and then replaces the state with the new session metadata.
+- `send-turn` and `stop` use `agent_identity` as the primary targeting value.
+- The previous state must not remain marked active after a successful replacement or stop.
+
 ## Risks / Trade-offs
 
 - [Risk] Session leaks when users forget explicit stop.
-  - Mitigation: Provide `stop` command and clear printed reminders; optionally include a cleanup helper that enumerates stale demo sessions.
+  - Mitigation: `start` replaces an existing active session, `stop` remains available for explicit teardown, and command output should show which prior identity was replaced.
 - [Risk] Ownership mismatch with untracked local CAO server process.
-  - Mitigation: Reuse launcher ownership checks and retry pattern used by current CAO demos.
+  - Mitigation: Reuse launcher ownership checks and retry pattern used by current CAO demos while always targeting `http://127.0.0.1:9889`.
 - [Risk] Interactive timing variability may reduce deterministic assertions.
-  - Mitigation: Keep verification focused on invariant outcomes (non-empty responses, same session identity across turns, accessible tmux target) instead of brittle timing conditions.
+  - Mitigation: Keep verification focused on invariant outcomes (non-empty responses, same `agent_identity` across turns, accessible tmux target) instead of brittle timing conditions.
 - [Trade-off] Additional script surface area to maintain.
   - Mitigation: Share helper logic and structure with existing CAO demo patterns where practical.
