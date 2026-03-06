@@ -52,7 +52,10 @@ pixi install
 pixi shell
 ```
 
-Optional Postgres + pgvector environment (mirrors main workspace `pg-hosting` setup):
+Optional Postgres + pgvector environment (for future context hosting):
+
+- Intended future use: manage persistent agent context such as RAG knowledge bases, dialog history, and work artifacts.
+- Not required for current core runtime flows.
 
 ```bash
 pixi install -e pg-hosting --manifest-path pyproject.toml
