@@ -33,9 +33,10 @@ Instead of shipping a fixed “agent graph” runtime (LangGraph / AutoGen-style
 
 ### Typical Use Cases
 
-- Share agent presets across a team without committing secrets.
-- Rotate credentials or change models without rewriting prompts.
-- Run locally (tmux-backed) or optionally through CAO when you want a REST-controlled tmux terminal.
+- **Parallel specialist agents**: run a "coder" agent and a "reviewer" agent side by side on the same repo — each with a different role and tool — so one writes while the other critiques.
+- **Optimization loops**: set up a coder agent that implements changes and a profiler agent that benchmarks them, iterating back and forth without manual handoff.
+- **Team agent presets**: give every team member the same pre-configured agent lineup (same models, skills, and roles) checked into the repo, without sharing anyone's API keys.
+- **Swap the AI, keep the workflow**: change which model or CLI tool an agent uses without touching its role prompt or the task it is working on.
 
 ### How Agents Join Your Workflow
 
