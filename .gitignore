@@ -14,9 +14,9 @@ dist/
 MANIFEST
 
 # Virtual environments
-.venv/
-venv/
-env/
+/.venv/
+/venv/
+/env/
 
 # uv
 .python-version
@@ -51,12 +51,7 @@ tmp/cao-home/
 tmp/cao-server/
 tmp/brains/
 
-# Local credential/state paths under fixtures and user-provided libraries
-tests/fixtures/agents/brains/api-creds/**/env/*.env
-tests/fixtures/agents/brains/api-creds/**/files/credentials.json
-tests/fixtures/agents/brains/api-creds/**/files/auth.json
-tests/fixtures/agents/brains/api-creds/**/files/oauth_creds.json
-tests/fixtures/agents/brains/api-creds/**/files/.claude.json
+# Local credential/state paths under user-provided libraries
 **/.claude.json
 **/.gemini/
 **/.codex/
