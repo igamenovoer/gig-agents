@@ -1,6 +1,6 @@
 # Houmao System-Skill Behavior Suite Catalog
 
-Catalog version: `houmao-dev-behavior-cases.v4`
+Catalog version: `houmao-dev-behavior-cases.v5`
 
 ## Workflow
 
@@ -52,7 +52,7 @@ The profile order is `minimal < normal < extended < complete`. A profile include
 | `extended` | Secondary routes, repeated identity, spoof resistance, aliases, missing dependencies, combined-pack context, and lifecycle reloads |
 | `complete` | Every committed case and declared variant in the selected area for this catalog version |
 
-`complete` means complete for `houmao-dev-behavior-cases.v4`; it does not claim coverage of uncommitted product behavior.
+`complete` means complete for `houmao-dev-behavior-cases.v5`; it does not claim coverage of uncommitted product behavior.
 
 ## Functional Areas and Cumulative Counts
 
@@ -72,7 +72,7 @@ Counts are committed case records before provider, repetition, invocation-mode f
 
 ## Cross-Cutting Tags
 
-Tags retain their version 2 membership and add version 3 cases where the same diagnostic contract applies. They are overlapping views and do not change functional ownership or cumulative profile membership.
+Tags retain their membership through version 5. They are overlapping views and do not change functional ownership or cumulative profile membership.
 
 - `critical`: `ACT-001`, `ACT-002`, `ACT-003`, `ACT-004`, `ACT-005`, `AUTO-001`, `ADM-003`, `ADM-004`, `ADM-006`, `AGT-002`, `AGT-004`, `AGT-005`, `SHR-001`, `SHR-002`, `SHR-004`, `SHR-009`, `LOOP-001`, `LOOP-002`, `LOOP-003`, `LOOP-008`, `PRM-001`, `PRM-002`, `ADF-001`, `ADF-002`, `ADF-003`, `ADF-004`, and `ADF-006`.
 - `actor-boundaries`: `ACT-006`, `ADM-005`, `ADM-007`, `ADM-008`, `AGT-004`, `AGT-005`, `AGT-006`, `AGT-007`, `SHR-002`, `SHR-003`, `SHR-006`, `SHR-007`, `SHR-009`, `LOOP-005`, `LOOP-006`, `LOOP-008`, `ADF-006`, `ADF-007`, and `ADF-008`.

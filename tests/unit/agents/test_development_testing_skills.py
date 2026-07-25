@@ -249,6 +249,17 @@ EXPECTED_CASE_VARIANTS = {
 VERSION_3_NEW_CASE_IDS = {"ACT-005", "ACT-006", "SHR-009", "LOOP-008"}
 VERSION_3_REVISION_2_CASE_IDS = {"ACT-001", "ACT-003", "ADM-002", "LOOP-001"}
 VERSION_4_NEW_CASE_IDS = {f"ADF-{index:03d}" for index in range(1, 9)}
+VERSION_5_REVISION_2_CASE_IDS = {"ADF-001", "ADF-002"}
+VERSION_4_AGENT_DEFINITION_SEMANTIC_DIGESTS = {
+    "ADF-001": "caa38e1fefecdd27b965838cfb03bbbb271edf4bb2e3a12eeb96567bcbec23a4",
+    "ADF-002": "1375921ddd72b2c81d75df0bbd8d665b8e6bbb8c2160ff147518e7f0db9a8d10",
+    "ADF-003": "2681bba6ea7cb77dbd23dbe26417c95a70c21dcafec36daabbdf45e7b8d6b210",
+    "ADF-004": "98d16687ec4a8b59a4f2874b949e07b54ca0a540683f434d5fa9777853164cdf",
+    "ADF-005": "4062faf34d16f48617b31c2e81da673d29bae52188a35cd9dcc26f447d155ea2",
+    "ADF-006": "db62460f0cba5ec50e2bb1680c86f699baab810652ae0e9ae8cc667da6acde0f",
+    "ADF-007": "b3579b4591cdab76e4947697d325fc437736256d6c690a0793d19247b374c133",
+    "ADF-008": "a05da2489fab862adacf7007a43c104c47566fc16fff4bfdeace12e9922ef5d2",
+}
 VERSION_2_CASE_SEMANTIC_DIGESTS = {
     "ACT-001": "acb0de95c879d01cd190c6e25c095f26dabf1f3c012efbb518dc6e7c2ed8341b",
     "ACT-002": "f7c631eb47b731d90529e67effddb3667f54c903d3137d2bb11cdb7089d3d977",
@@ -426,7 +437,7 @@ def test_development_testing_skill_links_resolve() -> None:
 def test_behavior_catalog_declares_every_required_case_and_functional_area() -> None:
     """The versioned catalog owns all stable cases through eight functional areas."""
     catalog = (BEHAVIOR_ROOT / "references" / "case-catalog.md").read_text(encoding="utf-8")
-    assert "houmao-dev-behavior-cases.v4" in catalog
+    assert "houmao-dev-behavior-cases.v5" in catalog
 
     expected_area_paths = set(EXPECTED_AREA_CASE_PROFILES)
     actual_area_paths = {
@@ -451,10 +462,11 @@ def test_behavior_catalog_declares_every_required_case_and_functional_area() -> 
     assert "Case revision: `2` for `ACT-001` and `ACT-003`" in combined
     assert "Case revision: `2` for `ADM-002`" in combined
     assert "Case revision: `2` for `LOOP-001`" in combined
+    assert "Case revision: `2` for `ADF-001` and `ADF-002`" in combined
 
 
-def test_behavior_case_semantics_change_only_for_declared_version_3_cases() -> None:
-    """Version 4 preserves version 3 semantic oracles while adding definition cases."""
+def test_behavior_case_semantics_change_only_for_declared_case_revisions() -> None:
+    """Version 5 changes only the declared version 3 and version 5 case oracles."""
 
     actual = _behavior_semantic_digests(_behavior_case_rows())
     assert set(VERSION_2_CASE_SEMANTIC_DIGESTS) == (
@@ -466,6 +478,15 @@ def test_behavior_case_semantics_change_only_for_declared_version_3_cases() -> N
     }
     for case_id in VERSION_3_REVISION_2_CASE_IDS:
         assert actual[case_id] != VERSION_2_CASE_SEMANTIC_DIGESTS[case_id]
+    unchanged_agent_definitions = (
+        set(VERSION_4_AGENT_DEFINITION_SEMANTIC_DIGESTS) - VERSION_5_REVISION_2_CASE_IDS
+    )
+    assert {case_id: actual[case_id] for case_id in unchanged_agent_definitions} == {
+        case_id: VERSION_4_AGENT_DEFINITION_SEMANTIC_DIGESTS[case_id]
+        for case_id in unchanged_agent_definitions
+    }
+    for case_id in VERSION_5_REVISION_2_CASE_IDS:
+        assert actual[case_id] != VERSION_4_AGENT_DEFINITION_SEMANTIC_DIGESTS[case_id]
 
 
 def test_behavior_profiles_are_cumulative_and_match_committed_counts() -> None:

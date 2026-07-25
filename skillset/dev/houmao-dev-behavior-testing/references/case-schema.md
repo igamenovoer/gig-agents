@@ -60,7 +60,7 @@ Variant records inherit the case id, revision, functional area, introduced profi
 | Field | Contract |
 | --- | --- |
 | `requested_selectors` | Exact ordered selector strings supplied by the maintainer |
-| `catalog_version` | `houmao-dev-behavior-cases.v4` |
+| `catalog_version` | `houmao-dev-behavior-cases.v5` |
 | `catalog_digest` | Digest of the committed catalog and selected area resources |
 | `resolved_cells` | Stable catalog-order records containing case id, revision, variant id, area, introduced profile, driver invocation mode, stimulus origin, exact stimulus digest, initial-root oracle, delegated-root oracle, route oracle, and contributing selectors |
 | `explicit_exclusions` | Any requested exclusions with a reason; absence is explicit |
@@ -81,6 +81,8 @@ Increment `case_revision` when the exact stimulus, expected initial root, delega
 Version 3 intentionally advances `ACT-001`, `ACT-003`, `ADM-002`, and `LOOP-001` to revision 2. It adds `ACT-005`, `ACT-006`, `SHR-009`, and `LOOP-008` at revision 1. Every other version 2 case retains its exact stimulus and semantic oracle.
 
 Version 4 adds the `agent-definitions` functional area and `ADF-001` through `ADF-008` at revision 1. Every version 3 case retains its exact stimulus and semantic oracle.
+
+Version 5 advances `ADF-001` and `ADF-002` to revision 2 so manual and automatic authoring routes require a current authoring-root README. Every other version 4 case retains its exact stimulus and semantic oracle.
 
 ## Guardrails
 

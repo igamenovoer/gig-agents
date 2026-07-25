@@ -285,6 +285,24 @@ def test_route_tables_cover_actor_eligibility_and_top_level_loops() -> None:
     assert "| `process-emails-via-gateway` |" not in admin_subcommands.group("body")
 
 
+def test_agent_definition_authoring_route_maintains_workspace_readme() -> None:
+    """The authoring route owns portable orientation without inventing a CLI command."""
+
+    routine_root = PUBLIC_ROOT / "houmao-shared-routines/subskills/houmao-agent-definition"
+    entrypoint = (routine_root / "SKILL-MAIN.md").read_text(encoding="utf-8")
+    authoring = (routine_root / "commands/agent-definitions/authoring.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "create or refresh `<workspace>/README.md`" in authoring
+    assert "immediately before every user-facing stop" in authoring
+    assert "exhaustive inventory of every regular file" in authoring
+    assert "not a `houmao-mgr` subcommand" in authoring
+    assert "default `<authoring-dir>/agent-definition` output" in entrypoint
+    assert "DO NOT treat the authoring-root README as source intent" in entrypoint
+    assert "READMD.md" not in authoring
+
+
 def test_semantic_preservation_fixture_matches_operations_aliases_and_help() -> None:
     """The checked-in semantic ledger remains represented by the v4 owners."""
 
