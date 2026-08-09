@@ -92,12 +92,12 @@ def _workflow_body(text: str) -> str:
     return match.group("body")
 
 
-def test_manifest_v4_declares_exact_static_collection() -> None:
+def test_manifest_v5_declares_exact_static_collection() -> None:
     """The manifest exposes the fixed six roots and sixteen owned children."""
 
     manifest = load_system_skill_manifest()
 
-    assert manifest.schema_version == "houmao-system-skills.v4"
+    assert manifest.schema_version == "houmao-system-skills.v5"
     assert manifest.standalone_skill_names == EXPECTED_STANDALONE_SKILL_NAMES
     assert set(manifest.shared_logical_ids) == set(EXPECTED_SHARED_ROUTINE_IDS)
     assert manifest.packs["admin"].standalone_skill_names == ADMIN_MEMBERS
@@ -105,7 +105,7 @@ def test_manifest_v4_declares_exact_static_collection() -> None:
     assert manifest.defaults.cli == ("admin",)
     assert manifest.defaults.managed_launch == ("agent",)
     assert manifest.defaults.managed_join == ("agent",)
-    assert manifest.auto_skill_name == "houmao-auto-system-prompt"
+    assert not hasattr(manifest, "auto_skill_name")
     assert tuple(
         record.name
         for record in manifest.standalone_skills.values()
@@ -163,14 +163,14 @@ def test_manifest_rejects_any_other_implicit_activation_set(tmp_path: Path) -> N
 
 
 def test_manifest_rejects_obsolete_composition_fields(tmp_path: Path) -> None:
-    """V4 schema does not accept any protected-mount declaration."""
+    """V5 schema does not accept any protected-mount declaration."""
 
     with pytest.raises(SystemSkillManifestError, match="Additional properties"):
         _load_modified_manifest(
             tmp_path,
             lambda text: text.replace(
-                'auto_skill_name = "houmao-auto-system-prompt"',
-                'auto_skill_name = "houmao-auto-system-prompt"\nprotected_mounts = []',
+                'schema_version = "houmao-system-skills.v5"',
+                'schema_version = "houmao-system-skills.v5"\nprotected_mounts = []',
                 1,
             ),
         )

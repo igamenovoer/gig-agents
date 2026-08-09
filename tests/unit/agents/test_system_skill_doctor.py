@@ -67,10 +67,9 @@ def test_six_source_roots_have_versions_and_children_remain_unversioned() -> Non
     children = tuple((PUBLIC_ROOT / "houmao-shared-routines/subskills").glob("*/SKILL-MAIN.md"))
     assert len(children) == 16
     assert all("houmao_version:" not in path.read_text(encoding="utf-8") for path in children)
-    auto_skill = (
-        REPO_ROOT / "src/houmao/agents/assets/auto_skills/houmao-auto-system-prompt/SKILL.md"
-    )
-    assert "houmao_version:" not in auto_skill.read_text(encoding="utf-8")
+    auto_skill_root = REPO_ROOT / "src/houmao/agents/assets/auto_skills"
+    assert not (auto_skill_root / "__init__.py").exists()
+    assert not (auto_skill_root / "houmao-auto-system-prompt/SKILL.md").exists()
 
 
 def test_frontmatter_parser_preserves_exact_version_string(tmp_path: Path) -> None:
@@ -361,7 +360,7 @@ def test_manifest_loading_does_not_require_version_metadata(tmp_path: Path) -> N
         destination_root=tmp_path / "staged",
     )
 
-    assert manifest.schema_version == "houmao-system-skills.v4"
+    assert manifest.schema_version == "houmao-system-skills.v5"
     assert loaded.schema_version == manifest.schema_version
     staged_entrypoint = staged.skills[0].path / "SKILL.md"
     assert "houmao_version:" not in staged_entrypoint.read_text(encoding="utf-8")
