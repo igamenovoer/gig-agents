@@ -31,11 +31,11 @@ Add a small helper (sibling to `kimi_system_prompt.py`) that reproduces `encodeW
 
 Alternative considered: shell out to `kimi` or node to compute the key. Rejected — the algorithm is ten lines and a runtime dependency on the provider for home construction is circular.
 
-### 2. One writer, gated on Kimi + unattended, called from both enforcement points
+### 2. One writer, gated on Kimi + unattended, enforced at provider start
 
-`ensure_kimi_workspace_trust(home_path, workdir)` writes the canonical record by atomic replacement (same pattern as `ensure_kimi_system_prompt`), returns typed provenance (state `projected`/`unchanged`, path, workspace key), and is a no-op byte-wise when the record already matches. Brain construction calls it after `SYSTEM.md` projection; provider-start planning calls it with the launch plan's actual working directory before process start, repairing drift and covering relaunch-into-different-workdir. Both call sites are gated on the Kimi tool lane and `operator_prompt_mode == unattended`.
+`ensure_kimi_workspace_trust(home_path, workdir)` writes the canonical record by atomic replacement (same pattern as `ensure_kimi_system_prompt`), returns typed provenance (state `projected`/`unchanged`, path, workspace key), and is a no-op byte-wise when the record already matches. Provider-start planning calls it with the launch plan's actual working directory before process start (fresh headless, fresh TUI, relaunch), repairing drift and covering relaunch-into-different-workdir, gated on the Kimi tool lane and `operator_prompt_mode == unattended`.
 
-Alternative considered: build-time only. Rejected — the relaunch workdir can differ from the build workdir, and provider start is where the launch plan knows the real workdir.
+Alternative considered: also pre-seed at brain construction, mirroring the two-enforcement-point `SYSTEM.md` lifecycle. Rejected during implementation — the trust key is derived from the launch working directory, and `BuildRequest` has no working-directory concept (brains are built workdir-agnostic), so a build-time write has no correct input. Provider start is the first point where the real workdir is known, and it runs before every provider process, so no case is left uncovered.
 
 ### 3. Provenance extends the existing native-prompt payload, no schema change
 
