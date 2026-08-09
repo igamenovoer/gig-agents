@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 import tomllib
 from typing import Any
 
 import pytest
+
+from houmao.agents.kimi_workspace_trust import kimi_workdir_key
 
 from houmao.agents.launch_policy.models import (
     LaunchPolicyStrategy,
@@ -1063,6 +1066,111 @@ def test_build_launch_plan_kimi_repairs_native_prompt_drift_before_provider_star
     assert (home_path / "SYSTEM.md").read_text(encoding="utf-8") == ("${base_prompt}\n\nprompt\n")
     assert repaired_plan.metadata["native_system_prompt"]["changed"] is True
     assert repaired_plan.metadata["native_system_prompt"]["validation"] == "passed"
+
+
+@pytest.mark.parametrize("backend", ["local_interactive", "kimi_headless"])
+def test_build_launch_plan_kimi_unattended_preseeds_workspace_trust(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    backend: str,
+) -> None:
+    env_file = tmp_path / "vars.env"
+    env_file.write_text("\n", encoding="utf-8")
+    _write(tmp_path / "repo/roles/r/system-prompt.md", "prompt")
+    home_path = tmp_path / "home"
+    _write(home_path / "config.toml", 'default_model = "kimi-code/default"\n')
+    _stub_tool_version(monkeypatch)
+    manifest = _manifest(
+        tool="kimi",
+        executable="kimi",
+        home_env_var="KIMI_CODE_HOME",
+        home_path=home_path,
+        env_file=env_file,
+        allowlisted_env_vars=[],
+        launch_policy={"operator_prompt_mode": "unattended"},
+    )
+    role = load_role_package(tmp_path / "repo", "r")
+
+    plan = build_launch_plan(
+        LaunchPlanRequest(
+            brain_manifest=manifest,
+            role_package=role,
+            backend=backend,
+            working_directory=tmp_path,
+        )
+    )
+
+    expected_key = kimi_workdir_key(tmp_path.resolve())
+    record_path = home_path / "workspace-trust" / expected_key
+    assert record_path.is_file()
+    payload = json.loads(record_path.read_text(encoding="utf-8"))
+    assert payload["root"] == str(tmp_path.resolve())
+    assert plan.metadata["workspace_trust"]["workspace_key"] == expected_key
+    assert plan.metadata["workspace_trust"]["state"] == "projected"
+
+    # Provider-start re-planning leaves a matching record untouched.
+    replayed = build_launch_plan(
+        LaunchPlanRequest(
+            brain_manifest=manifest,
+            role_package=role,
+            backend=backend,
+            working_directory=tmp_path,
+        )
+    )
+    assert replayed.metadata["workspace_trust"]["state"] == "unchanged"
+
+    # Relaunch into a different working directory asserts a second record.
+    other_workdir = tmp_path / "elsewhere"
+    other_workdir.mkdir()
+    moved = build_launch_plan(
+        LaunchPlanRequest(
+            brain_manifest=manifest,
+            role_package=role,
+            backend=backend,
+            working_directory=other_workdir,
+        )
+    )
+    other_key = kimi_workdir_key(other_workdir.resolve())
+    assert other_key != expected_key
+    assert (home_path / "workspace-trust" / other_key).is_file()
+    assert moved.metadata["workspace_trust"]["workspace_key"] == other_key
+
+
+@pytest.mark.parametrize("backend", ["local_interactive", "kimi_headless"])
+def test_build_launch_plan_kimi_as_is_does_not_preseed_workspace_trust(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    backend: str,
+) -> None:
+    env_file = tmp_path / "vars.env"
+    env_file.write_text("\n", encoding="utf-8")
+    _write(tmp_path / "repo/roles/r/system-prompt.md", "prompt")
+    home_path = tmp_path / "home"
+    _write(home_path / "config.toml", 'default_model = "kimi-code/default"\n')
+    _stub_tool_version(monkeypatch)
+    manifest = _manifest(
+        tool="kimi",
+        executable="kimi",
+        home_env_var="KIMI_CODE_HOME",
+        home_path=home_path,
+        env_file=env_file,
+        allowlisted_env_vars=[],
+        launch_policy={"operator_prompt_mode": "as_is"},
+    )
+    role = load_role_package(tmp_path / "repo", "r")
+
+    plan = build_launch_plan(
+        LaunchPlanRequest(
+            brain_manifest=manifest,
+            role_package=role,
+            backend=backend,
+            working_directory=tmp_path,
+        )
+    )
+
+    assert plan.role_injection.method == "native_home_system_prompt"
+    assert "workspace_trust" not in plan.metadata
+    assert not (home_path / "workspace-trust").exists()
 
 
 def test_build_launch_plan_replaces_conflicting_claude_adapter_model_selection_args(

@@ -13,6 +13,10 @@ from houmao.agents.kimi_system_prompt import (
     force_kimi_v2_engine_env,
     validate_kimi_native_prompt_launch,
 )
+from houmao.agents.kimi_workspace_trust import (
+    KimiWorkspaceTrustError,
+    ensure_kimi_workspace_trust,
+)
 from houmao.agents.launch_policy import apply_launch_policy, detect_tool_version
 from houmao.agents.launch_policy.models import (
     LaunchPolicyApplicationKind,
@@ -231,6 +235,11 @@ def build_launch_plan(request: LaunchPlanRequest) -> LaunchPlan:
                 else None
             ),
         )
+        if requested_operator_prompt_mode == "unattended":
+            metadata["workspace_trust"] = _ensure_kimi_workspace_trust_for_start(
+                working_directory=request.working_directory,
+                home_path=home_path,
+            )
     if launch_policy_result.strategy is not None:
         metadata["launch_policy"] = launch_policy_result.strategy.to_metadata_payload()
     metadata["launch_policy_request"] = {
@@ -311,6 +320,29 @@ def _ensure_kimi_native_system_prompt_for_start(
         "supported_versions": ">=0.34.0",
         "detected_version": version_text,
     }
+
+
+def _ensure_kimi_workspace_trust_for_start(
+    *,
+    working_directory: Path,
+    home_path: Path,
+) -> dict[str, Any]:
+    """Pre-seed Kimi's workspace trust for the launch workdir before start.
+
+    Unattended launches must not surface Kimi's "Trust this folder?" modal;
+    the provider's trust check is presence-only, so the managed home receives
+    the deterministic record for the actual launch working directory here.
+    """
+
+    try:
+        with provider_state_mutation_lock(home_path):
+            projection = ensure_kimi_workspace_trust(
+                home_path=home_path,
+                working_directory=working_directory,
+            )
+    except KimiWorkspaceTrustError as exc:
+        raise LaunchPlanError(str(exc)) from exc
+    return projection.to_payload()
 
 
 def plan_role_injection(

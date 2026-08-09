@@ -99,9 +99,9 @@ def test_kimi_compatibility_provider_writes_v034_markdown_agent_file(tmp_path: P
     agent_path = Path(command_parts[command_parts.index("--agent-file") + 1])
     assert agent_path.name == "agent.md"
     assert agent_path.read_text(encoding="utf-8") == (
-            "---\n"
-            "name: houmao-cao-profile\n"
-            "description: Temporary Houmao CAO compatibility profile\n"
+        "---\n"
+        "name: houmao-cao-profile\n"
+        "description: Temporary Houmao CAO compatibility profile\n"
         "override: true\n"
         "---\n\n"
         "${base_prompt}\n\n"
